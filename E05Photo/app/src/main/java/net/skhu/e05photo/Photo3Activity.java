@@ -1,19 +1,36 @@
 package net.skhu.e05photo;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.View;
+import android.widget.ImageView;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
+
 import java.io.File;
 
 public class Photo3Activity extends AppCompatActivity {
+
+    OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(false) {
+        @Override
+        public void handleOnBackPressed() {
+            button.setVisibility(View.VISIBLE);
+            imageView.setVisibility(View.GONE);
+            this.setEnabled(false);
+        }
+    };
+
+    ImageView imageView;
+    FloatingActionButton button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,18 +38,34 @@ public class Photo3Activity extends AppCompatActivity {
         setContentView(R.layout.activity_photo3);
         setSupportActionBar(findViewById(R.id.toolbar));
 
-        FloatingActionButton button = findViewById(R.id.btnTakePhoto);
+        button = findViewById(R.id.btnTakePhoto);
         button.setOnClickListener((view) ->
                 Snackbar.make(view, "이것은 Snackbar 메시지입니다", Snackbar.LENGTH_LONG).show());
+
+        imageView = findViewById(R.id.imageView1);
+        imageView.setVisibility(View.GONE);
+        imageView.setOnClickListener((view) -> {
+            button.setVisibility(View.VISIBLE);
+            view.setVisibility(View.GONE);
+            backPressedCallback.setEnabled(false);
+        });
 
         File directory = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File[] files = directory.listFiles();
 
-        FileRecyclerView1Adapter fileRecyclerView1Adapter = new FileRecyclerView1Adapter(this, files);
+        OnFileClickListener clickListener = (index, file) -> {
+            button.setVisibility(View.INVISIBLE);
+            imageView.setImageURI(Uri.fromFile(file));
+            imageView.setVisibility(View.VISIBLE);
+            backPressedCallback.setEnabled(true);
+        };
+        FileRecyclerView2Adapter adapter = new FileRecyclerView2Adapter(this, files, clickListener);
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setAdapter(fileRecyclerView1Adapter);
+        recyclerView.setAdapter(adapter);
+        getOnBackPressedDispatcher().addCallback(backPressedCallback);
     }
 }
+
